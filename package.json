@@ -1,0 +1,29 @@
+{
+  "name": "nine-box",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nine-Box grid for annual team reviews. Runs entirely in the browser: no server, no database.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.5",
+    "vite-plugin-singlefile": "^2.3.4",
+    "vitest": "^5.0.5"
+  }
+}
