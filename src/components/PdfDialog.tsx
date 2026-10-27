@@ -12,12 +12,7 @@ export function PdfDialog({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  const [options, setOptions] = useState<PdfOptions>(() => ({
-    calibration: true,
-    team: ws.members.length > 0,
-    salaries: ws.members.some((m) => m.salary !== null),
-    notes: Object.values(ws.notes).some((n) => n.trim()),
-  }));
+  const [options, setOptions] = useState<PdfOptions>(() => ({ calibration: true, team: ws.members.length > 0 }));
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -26,7 +21,6 @@ export function PdfDialog({
   }, []);
 
   const toggle = (key: keyof PdfOptions) => setOptions((o) => ({ ...o, [key]: !o[key] }));
-  const noAmounts = !options.calibration && !options.team;
 
   return (
     <dialog
@@ -62,20 +56,11 @@ export function PdfDialog({
           </label>
           <label>
             <input type="checkbox" checked={options.calibration} onChange={() => toggle('calibration')} />
-            Calibration and increment budget
+            Calibration and increments
           </label>
           <label>
             <input type="checkbox" checked={options.team} disabled={ws.members.length === 0} onChange={() => toggle('team')} />
             Team list
-          </label>
-          <label className="checks__sub">
-            <input type="checkbox" checked={options.salaries && !noAmounts} disabled={noAmounts} onChange={() => toggle('salaries')} />
-            Include salary amounts
-          </label>
-          <p className="hint checks__sub">Untick to share a copy without salaries. Increment percentages are always shown.</p>
-          <label>
-            <input type="checkbox" checked={options.notes} onChange={() => toggle('notes')} />
-            Guiding questions and notes
           </label>
         </div>
         <footer className="dialog__footer">

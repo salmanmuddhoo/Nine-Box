@@ -29,11 +29,13 @@ scales, same box names and actions.
 3. **Grid** – drag each name into a box, or click a name to pick its levels.
    Each person shows as a figure coloured by their tier.
 4. **Calibration** – compare each tier with its target and move individuals to
-   another tier where needed, without changing their box. The increment budget
-   (per tier and in total) updates as you go.
-5. **Export Excel** for the final record (team list, grid, calibration, notes),
-   or **Export PDF** for a landscape A4 report to print or share. The PDF can
-   leave out salary amounts, so it can go to people who should not see them.
+   another tier where needed, without changing their box. Each person's
+   increment % follows their tier, and the average per tier updates as you go.
+5. **Export Excel** for the final record (team list, grid, calibration), or
+   **Export PDF** for a landscape A4 report to print or share.
+
+The **Guide** button next to Export PDF recaps these steps and lists the
+guiding questions for the review.
 
 ### Default tiers
 

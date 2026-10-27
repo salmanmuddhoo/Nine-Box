@@ -47,7 +47,6 @@ export function defaultSettings(): Settings {
     },
     tiers: DEFAULT_TIERS,
     boxes: DEFAULT_BOXES,
-    currency: '',
   } satisfies Settings);
 }
 

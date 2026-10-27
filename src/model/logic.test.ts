@@ -1,15 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  boxOf,
-  calibration,
-  incrementAmount,
-  incrementSummary,
-  isTierAdjusted,
-  levelsOfBox,
-  memberIncrement,
-  memberTier,
-  newSalary,
-} from './logic';
+import { boxOf, calibration, incrementSummary, isTierAdjusted, levelsOfBox, memberIncrement, memberTier } from './logic';
 import { reducer } from './store';
 import { BOX_IDS, type Level, type Workspace } from './types';
 import { createMember, createWorkspace } from './workspace';
@@ -103,30 +93,27 @@ describe('calibration', () => {
 
 describe('increments', () => {
   it('uses the tier increment unless the member has their own', () => {
-    const ws = workspaceWith([3, 3], [2, 2]);
+    const ws = workspaceWith([3, 3], [2, 2], [2, 2], [null, null]);
     ws.settings.tiers.find((t) => t.id === 'excellente')!.increment = 8;
     ws.settings.tiers.find((t) => t.id === 'normale')!.increment = 3;
-    const [top, core] = ws.members;
-    top.salary = 50000;
-    core.salary = 40000;
+    const [top, core, other] = ws.members;
     expect(memberIncrement(ws.settings, top)).toBe(8);
-    expect(incrementAmount(ws.settings, top)).toBe(4000);
-    expect(newSalary(ws.settings, top)).toBe(54000);
+    expect(memberIncrement(ws.settings, core)).toBe(3);
+    other.incrementOverride = 4;
+    expect(memberIncrement(ws.settings, other)).toBe(4);
 
-    core.incrementOverride = 3.5;
-    expect(incrementAmount(ws.settings, core)).toBe(1400);
-
-    const { total, rows } = incrementSummary(ws);
-    expect(total).toMatchObject({ count: 2, costed: 2, payroll: 90000, increment: 5400 });
-    expect(rows[0]).toMatchObject({ count: 1, increment: 4000 });
+    const { rows, total } = incrementSummary(ws);
+    expect(rows[0]).toMatchObject({ count: 1, withIncrement: 1, average: 8 });
+    expect(rows[2]).toMatchObject({ count: 2, withIncrement: 2, average: 3.5 });
+    expect(rows[3]).toMatchObject({ count: 0, average: null });
+    // The last row holds people not placed yet.
+    expect(rows[4]).toMatchObject({ tier: null, count: 1, withIncrement: 0, average: null });
+    expect(total).toMatchObject({ count: 4, withIncrement: 3, average: 5 });
   });
 
-  it('leaves amounts empty when salary or percentage is missing', () => {
+  it('has no average while no increment is set', () => {
     const ws = workspaceWith([2, 2]);
-    const [m] = ws.members;
-    expect(incrementAmount(ws.settings, m)).toBeNull();
-    m.salary = 1000;
-    expect(incrementAmount(ws.settings, m)).toBeNull();
-    expect(incrementSummary(ws).total).toMatchObject({ payroll: 1000, costed: 0, increment: 0 });
+    expect(memberIncrement(ws.settings, ws.members[0])).toBeNull();
+    expect(incrementSummary(ws).total).toMatchObject({ count: 1, withIncrement: 0, average: null });
   });
 });

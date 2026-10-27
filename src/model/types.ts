@@ -46,8 +46,6 @@ export interface Settings {
   /** Ordered from best to worst. */
   tiers: Tier[];
   boxes: Record<BoxId, BoxConfig>;
-  /** Free text shown next to amounts, e.g. "Rs" or "MUR". */
-  currency: string;
 }
 
 export interface Member {
@@ -60,7 +58,6 @@ export interface Member {
   tierOverride: string | null;
   /** Replaces the tier's default increment, in percent. */
   incrementOverride: number | null;
-  salary: number | null;
   comment: string;
 }
 
@@ -75,6 +72,4 @@ export interface Workspace {
   team: Team;
   members: Member[];
   settings: Settings;
-  /** Notes for the guiding questions, keyed by question id. */
-  notes: Record<string, string>;
 }

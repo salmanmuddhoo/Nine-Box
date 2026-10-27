@@ -1,31 +1,15 @@
 import type { jsPDF } from 'jspdf';
 import type { CellDef, CellHookData, CellInput, RowInput, UserOptions } from 'jspdf-autotable';
 import { shade, tint } from '../colors';
-import { formatCount, formatMoney, formatPercent } from '../format';
-import { GUIDING_QUESTIONS } from '../model/defaults';
-import {
-  boxTier,
-  calibration,
-  incrementAmount,
-  incrementSummary,
-  isTierAdjusted,
-  levelText,
-  memberBox,
-  memberIncrement,
-  memberTier,
-  newSalary,
-} from '../model/logic';
+import { formatCount, formatPercent } from '../format';
+import { boxTier, calibration, incrementSummary, isTierAdjusted, levelText, memberBox, memberIncrement, memberTier } from '../model/logic';
 import { LEVELS, type BoxId, type Tier, type Workspace } from '../model/types';
 
 export interface PdfOptions {
-  /** Distribution against targets and the increment budget. */
+  /** Distribution against targets and increments per tier. */
   calibration: boolean;
   /** One row per member. */
   team: boolean;
-  /** Salaries and increment amounts; percentages are always shown. */
-  salaries: boolean;
-  /** Guiding questions with the notes taken. */
-  notes: boolean;
 }
 
 type RGB = [number, number, number];
@@ -50,15 +34,11 @@ export async function createPdf(ws: Workspace, options: PdfOptions, compress = t
   drawGridPage(doc, ws);
   if (options.calibration) {
     doc.addPage();
-    drawCalibrationPage(doc, autoTable, ws, options);
+    drawCalibrationPage(doc, autoTable, ws);
   }
   if (options.team && ws.members.length > 0) {
     doc.addPage();
-    drawTeamPage(doc, autoTable, ws, options);
-  }
-  if (options.notes) {
-    doc.addPage();
-    drawNotesPage(doc, autoTable, ws);
+    drawTeamPage(doc, autoTable, ws);
   }
   drawFooters(doc, ws);
   return doc;
@@ -350,8 +330,7 @@ function right(content: string): CellDef {
   return { content: pdfText(content), styles: { halign: 'right' } };
 }
 
-function drawCalibrationPage(doc: jsPDF, autoTable: AutoTable, ws: Workspace, options: PdfOptions) {
-  const { settings } = ws;
+function drawCalibrationPage(doc: jsPDF, autoTable: AutoTable, ws: Workspace) {
   const cal = calibration(ws);
   const inc = incrementSummary(ws);
   pageTitle(doc, 'Calibration', ws);
@@ -378,42 +357,34 @@ function drawCalibrationPage(doc: jsPDF, autoTable: AutoTable, ws: Workspace, op
   doc.text('"On target" means within one person of the target headcount.', PAGE.m, lastY(doc) + 4.5);
 
   sectionTitle(doc, 'Annual increments', lastY(doc) + 13);
-  const money = (n: number) => right(formatMoney(n, settings.currency));
   const incRows = inc.rows.filter((row) => row.tier !== null || row.count > 0);
-  const body: RowInput[] = incRows.map((row) => {
-    const base: CellInput[] = [row.tier ? pdfText(row.tier.name) : 'Not placed yet', right(String(row.count)), right(row.tier ? formatPercent(row.tier.increment) || 'not set' : '')];
-    return options.salaries
-      ? [...base, money(row.payroll), money(row.increment), right(row.payroll ? formatPercent((row.increment / row.payroll) * 100) : '')]
-      : base;
-  });
-  const head: CellInput[] = ['Tier', right('Members'), right('Default increment')];
-  const foot: CellInput[] = ['Total', right(String(inc.total.count)), ''];
   autoTable(doc, {
     ...TABLE_STYLE,
     startY: lastY(doc) + 16,
-    head: [options.salaries ? [...head, right('Current payroll'), right('Increment cost'), right('% of payroll')] : head],
-    body,
-    foot: [
-      options.salaries
-        ? [...foot, money(inc.total.payroll), money(inc.total.increment), right(inc.total.payroll ? formatPercent((inc.total.increment / inc.total.payroll) * 100) : '')]
-        : foot,
-    ],
+    head: [['Tier', right('Members'), right('Default increment'), right('Average increment')]],
+    body: incRows.map((row) => [
+      row.tier ? pdfText(row.tier.name) : 'Not placed yet',
+      right(String(row.count)),
+      right(row.tier ? formatPercent(row.tier.increment) || 'not set' : ''),
+      right(formatPercent(row.average)),
+    ]),
+    foot: [['Total', right(String(inc.total.count)), '', right(formatPercent(inc.total.average))]],
     ...tierCells(incRows.map((r) => r.tier)),
   });
+  font(doc, 7.5, 'italic', SOFT);
+  doc.text("Average increment is the simple average of each person's increment %.", PAGE.m, lastY(doc) + 4.5);
 }
 
-function drawTeamPage(doc: jsPDF, autoTable: AutoTable, ws: Workspace, options: PdfOptions) {
+function drawTeamPage(doc: jsPDF, autoTable: AutoTable, ws: Workspace) {
   const { settings } = ws;
   pageTitle(doc, 'Team', ws);
-  const head: CellInput[] = ['Name', 'Position', pdfText(settings.savoirEtre.name), pdfText(settings.savoirFaire.name), 'Box', 'Tier', right('Increment')];
-  if (options.salaries) head.push(right('Current salary'), right('New salary'));
-  head.push('Comments');
+  const head: CellInput[] = ['Name', 'Position', pdfText(settings.savoirEtre.name), pdfText(settings.savoirFaire.name), 'Box', 'Tier', right('Increment'), 'Comments'];
 
   const tiers = ws.members.map((mem) => memberTier(settings, mem));
   const body: RowInput[] = ws.members.map((mem, i) => {
     const box = memberBox(mem);
     const tier = tiers[i];
-    const row: CellInput[] = [
+    return [
       pdfText(mem.name),
       pdfText(mem.position),
       pdfText(levelText(settings, 'savoirEtre', mem.savoirEtre)),
@@ -421,13 +392,8 @@ function drawTeamPage(doc: jsPDF, autoTable: AutoTable, ws: Workspace, options: 
       box ? pdfText(settings.boxes[box].title) : '',
       tier ? pdfText(tier.name) + (isTierAdjusted(settings, mem) ? ' *' : '') : 'Not placed',
       right(formatPercent(memberIncrement(settings, mem))),
+      pdfText(mem.comment),
     ];
-    if (options.salaries) {
-      const amount = incrementAmount(settings, mem);
-      row.push(right(formatMoney(mem.salary, settings.currency)), right(amount === null ? '' : formatMoney(newSalary(settings, mem), settings.currency)));
-    }
-    row.push(pdfText(mem.comment));
-    return row;
   });
 
   autoTable(doc, {
@@ -435,29 +401,13 @@ function drawTeamPage(doc: jsPDF, autoTable: AutoTable, ws: Workspace, options: 
     startY: PAGE.m + 15,
     head: [head],
     body,
-    columnStyles: { [head.length - 1]: { cellWidth: options.salaries ? 55 : 80 } },
+    columnStyles: { [head.length - 1]: { cellWidth: 80 } },
     ...tierCells(tiers, 5),
   });
   if (ws.members.some((mem) => isTierAdjusted(settings, mem))) {
     font(doc, 7.5, 'italic', SOFT);
     doc.text('* tier adjusted during calibration', PAGE.m, lastY(doc) + 4.5);
   }
-}
-
-function drawNotesPage(doc: jsPDF, autoTable: AutoTable, ws: Workspace) {
-  pageTitle(doc, 'Guiding questions', ws);
-  autoTable(doc, {
-    ...TABLE_STYLE,
-    startY: PAGE.m + 15,
-    head: [['Topic', 'Question', 'Notes']],
-    body: GUIDING_QUESTIONS.map((q) => [
-      { content: pdfText(q.title), styles: { fontStyle: 'bold' } },
-      { content: pdfText(q.question), styles: { textColor: SOFT } },
-      pdfText(ws.notes[q.id] ?? ''),
-    ]),
-    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 100 } },
-    styles: { ...TABLE_STYLE.styles, valign: 'top' },
-  });
 }
 
 function drawFooters(doc: jsPDF, ws: Workspace) {

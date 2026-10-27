@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { CalibrationView } from './components/CalibrationView';
 import { GridView } from './components/GridView';
-import { GuideView } from './components/GuideView';
+import { GuideDialog } from './components/GuideDialog';
 import { MemberDialog } from './components/MemberDialog';
 import { PdfDialog } from './components/PdfDialog';
 import { SettingsView } from './components/SettingsView';
@@ -17,7 +17,6 @@ const TABS = [
   { id: 'team', label: 'Team' },
   { id: 'grid', label: 'Grid' },
   { id: 'calibration', label: 'Calibration' },
-  { id: 'guide', label: 'Guide' },
   { id: 'settings', label: 'Settings' },
 ] as const;
 
@@ -34,6 +33,7 @@ export function App() {
   const [keepDraft, setKeepDraft] = useState(draftEnabled);
   const [editing, setEditing] = useState<string | null>(null);
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -182,6 +182,9 @@ export function App() {
           <button type="button" className="button button--accent" onClick={() => setPdfOpen(true)}>
             Export PDF
           </button>
+          <button type="button" className="button button--on-dark" onClick={() => setGuideOpen(true)}>
+            Guide
+          </button>
           <input
             ref={fileInput}
             type="file"
@@ -198,8 +201,8 @@ export function App() {
 
       <div className="privacy">
         <span>
-          🔒 Private: everything stays in this browser. Nothing is uploaded or stored in a database — use <strong>Save</strong>{' '}
-          or <strong>Export Excel</strong> to keep your work.
+          🔒 Private: everything stays in this browser. Use <strong>Save</strong> or <strong>Export Excel</strong> to keep
+          your work.
         </span>
         <label className="privacy__toggle">
           <input type="checkbox" checked={keepDraft} onChange={(e) => toggleDraft(e.target.checked)} />
@@ -226,13 +229,14 @@ export function App() {
         {tab === 'team' && <TeamView ws={ws} act={act} onEdit={setEditing} onImport={pickFile} />}
         {tab === 'grid' && <GridView ws={ws} act={act} onEdit={setEditing} />}
         {tab === 'calibration' && <CalibrationView ws={ws} act={act} onEdit={setEditing} />}
-        {tab === 'guide' && <GuideView ws={ws} act={act} />}
         {tab === 'settings' && <SettingsView ws={ws} act={act} />}
       </main>
 
       <footer className="app-footer">Developed by Salman Muddhoo using AI</footer>
 
       {pdfOpen && <PdfDialog ws={ws} onExport={exportToPdf} onClose={() => setPdfOpen(false)} />}
+
+      {guideOpen && <GuideDialog settings={ws.settings} onClose={() => setGuideOpen(false)} />}
 
       {editingMember && (
         <MemberDialog key={editingMember.id} member={editingMember} settings={ws.settings} act={act} onClose={() => setEditing(null)} />

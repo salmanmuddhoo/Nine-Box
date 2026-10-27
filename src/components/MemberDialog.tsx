@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { formatMoney } from '../format';
-import { boxTier, incrementAmount, isTierAdjusted, memberBox, memberTier, newSalary } from '../model/logic';
+import { boxTier, isTierAdjusted, memberBox, memberTier } from '../model/logic';
 import type { Action } from '../model/store';
 import type { Member, Settings } from '../model/types';
 import { LevelSelect, TierSelect } from './fields';
@@ -27,7 +26,6 @@ export function MemberDialog({
   const update = (patch: Partial<Omit<Member, 'id'>>) => act({ type: 'updateMember', id: member.id, patch });
   const box = memberBox(member);
   const tier = memberTier(settings, member);
-  const amount = incrementAmount(settings, member);
   const id = (field: string) => `member-${member.id}-${field}`;
 
   return (
@@ -96,16 +94,6 @@ export function MemberDialog({
               onChange={(v) => update({ incrementOverride: v })}
             />
             <p className="hint">Leave empty to use the tier's increment{tier?.increment != null ? ` (${tier.increment} %)` : ''}.</p>
-          </div>
-
-          <label htmlFor={id('salary')}>Current salary</label>
-          <div>
-            <NumberInput id={id('salary')} value={member.salary} onChange={(v) => update({ salary: v })} />
-            {amount !== null && (
-              <p className="hint">
-                +{formatMoney(amount, settings.currency)} → <strong>{formatMoney(newSalary(settings, member), settings.currency)}</strong>
-              </p>
-            )}
           </div>
 
           <label htmlFor={id('comment')}>Comments</label>

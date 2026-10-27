@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { formatMoney } from '../format';
-import { memberBox, memberTier, newSalary } from '../model/logic';
+import { memberBox, memberTier } from '../model/logic';
 import type { Action } from '../model/store';
 import type { Member, Workspace } from '../model/types';
 import { createMember } from '../model/workspace';
@@ -128,8 +127,6 @@ export function TeamView({
                   <th>Box</th>
                   <th>Tier</th>
                   <th className="num">Increment %</th>
-                  <th className="num">Current salary</th>
-                  <th className="num">New salary</th>
                   <th aria-label="Actions" />
                 </tr>
               </thead>
@@ -165,10 +162,6 @@ export function TeamView({
                           onChange={(v) => update({ incrementOverride: v })}
                         />
                       </td>
-                      <td className="num">
-                        <NumberInput aria-label="Current salary" className="input-money" value={m.salary} onChange={(v) => update({ salary: v })} />
-                      </td>
-                      <td className="num nowrap">{formatMoney(newSalary(settings, m), settings.currency)}</td>
                       <td className="nowrap">
                         <button type="button" className="button button--small" onClick={() => onEdit(m.id)}>
                           {m.comment ? 'Details ●' : 'Details'}

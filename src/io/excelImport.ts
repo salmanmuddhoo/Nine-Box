@@ -52,13 +52,11 @@ interface Table {
   position?: number;
   savoirEtre?: number;
   savoirFaire?: number;
-  salary?: number;
   comment?: number;
 }
 
 const NAME_HEADERS = ['nom', 'name', 'employe', 'employee', 'collaborateur', 'membre', 'member', 'nom complet', 'full name', 'nom et prenom', 'prenom et nom'];
 const POSITION_HEADERS = ['poste', 'position', 'role', 'fonction', 'job title', 'title', 'titre'];
-const SALARY_HEADERS = ['salaire', 'salary', 'current salary', 'salaire actuel'];
 const COMMENT_HEADERS = ['commentaire', 'commentaires', 'comment', 'comments', 'notes', 'remarques'];
 
 function findTable(ws: Worksheet, settings: Settings): Table | null {
@@ -77,7 +75,6 @@ function findTable(ws: Worksheet, settings: Settings): Table | null {
       else if (POSITION_HEADERS.includes(h)) take('position', col);
       else if (matchesAxis(h, settings.savoirEtre, ['savoir-etre', 'savoir etre'])) take('savoirEtre', col);
       else if (matchesAxis(h, settings.savoirFaire, ['savoir-faire', 'savoir faire'])) take('savoirFaire', col);
-      else if (SALARY_HEADERS.some((s) => h.startsWith(s))) take('salary', col);
       else if (COMMENT_HEADERS.includes(h)) take('comment', col);
     });
     if (table.name !== undefined) return { ...table, headerRow: r } as Table;
@@ -102,7 +99,6 @@ function readTable(ws: Worksheet, table: Table, settings: Settings): Member[] {
         position: text(table.position),
         savoirEtre: parseLevel(text(table.savoirEtre), settings.savoirEtre),
         savoirFaire: parseLevel(text(table.savoirFaire), settings.savoirFaire),
-        salary: parseNumber(text(table.salary)),
         comment: text(table.comment),
       }),
     );
@@ -127,15 +123,6 @@ export function parseLevel(value: string, axis: Axis): Level | null {
     if (head === normalize(label) || text === full) return (i + 1) as Level;
   }
   return LEVEL_ALIASES[head] ?? null;
-}
-
-function parseNumber(value: string): number | null {
-  let text = value.replace(/[\s  ]/g, '');
-  if (!text) return null;
-  // "45 000,50" (French) vs "45,000.50" (English).
-  text = /,\d{1,2}$/.test(text) && !text.includes('.') ? text.replace(',', '.') : text.replace(/,/g, '');
-  const n = Number(text);
-  return Number.isFinite(n) ? n : null;
 }
 
 function normalize(value: string): string {

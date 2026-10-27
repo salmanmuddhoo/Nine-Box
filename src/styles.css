@@ -474,12 +474,6 @@ textarea {
   text-align: right;
 }
 
-.input-money {
-  width: 120px !important;
-  min-width: 0 !important;
-  text-align: right;
-}
-
 .tier-select {
   background-color: var(--tier-tint) !important;
   border-color: color-mix(in srgb, var(--tier) 45%, transparent) !important;
@@ -882,6 +876,20 @@ textarea {
 
 /* Guide */
 
+.dialog--wide {
+  width: min(820px, calc(100vw - 32px));
+}
+
+.guide-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dialog__footer--end {
+  justify-content: flex-end;
+}
+
 .steps {
   margin: 0;
   padding-left: 20px;
@@ -893,19 +901,25 @@ textarea {
 .questions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 12px;
+  gap: 10px;
+  margin: 0;
 }
 
 .question {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 12px;
+  gap: 4px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
 }
 
-.question p {
+.question dt {
+  font-weight: 600;
+}
+
+.question dd {
+  margin: 0;
   font-size: 0.88rem;
   color: var(--ink-soft);
 }
@@ -1032,10 +1046,6 @@ textarea {
 .checks label:has(input:disabled) {
   cursor: default;
   color: var(--ink-soft);
-}
-
-.checks__sub {
-  margin-left: 24px;
 }
 
 .app-footer {

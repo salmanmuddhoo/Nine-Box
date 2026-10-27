@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { createMember, createWorkspace } from '../model/workspace';
 import { createPdf, layoutNames, pdfText, type PdfOptions } from './pdfExport';
 
-const ALL: PdfOptions = { calibration: true, team: true, salaries: true, notes: true };
+const ALL: PdfOptions = { calibration: true, team: true };
 
 function sampleWorkspace() {
   const ws = createWorkspace();
   ws.team = { name: 'Finance', manager: 'Manager', period: '2026' };
   ws.members = [
-    createMember({ name: 'Alice Martin', savoirEtre: 3, savoirFaire: 3, salary: 50000 }),
-    createMember({ name: 'Bob Dupont', savoirEtre: 2, savoirFaire: 2, salary: 40000, tierOverride: 'bonne' }),
+    createMember({ name: 'Alice Martin', savoirEtre: 3, savoirFaire: 3, incrementOverride: 6 }),
+    createMember({ name: 'Bob Dupont', savoirEtre: 2, savoirFaire: 2, tierOverride: 'bonne' }),
     createMember({ name: 'Dev Ramsamy' }),
   ];
   return ws;
@@ -43,20 +43,19 @@ describe('layoutNames', () => {
 describe('createPdf', () => {
   it('builds one page per chosen section', async () => {
     const ws = sampleWorkspace();
-    expect((await createPdf(ws, ALL, false)).getNumberOfPages()).toBe(4);
-    expect((await createPdf(ws, { calibration: false, team: false, salaries: false, notes: false }, false)).getNumberOfPages()).toBe(1);
-    expect((await createPdf(createWorkspace(), ALL, false)).getNumberOfPages()).toBe(3);
+    expect((await createPdf(ws, ALL, false)).getNumberOfPages()).toBe(3);
+    expect((await createPdf(ws, { calibration: false, team: false }, false)).getNumberOfPages()).toBe(1);
+    // No team list page for an empty team.
+    expect((await createPdf(createWorkspace(), ALL, false)).getNumberOfPages()).toBe(2);
   });
 
-  it('writes the names and leaves salaries out on request', async () => {
-    const ws = sampleWorkspace();
-    const full = (await createPdf(ws, ALL, false)).output();
-    expect(full).toContain('Alice Martin');
-    expect(full).toContain('Bob Dupont *');
-    expect(full).toContain('Current salary');
-    const shared = (await createPdf(ws, { ...ALL, salaries: false }, false)).output();
-    expect(shared).toContain('Dev Ramsamy');
-    expect(shared).not.toContain('Current salary');
-    expect(shared).not.toContain('50,000');
+  it('writes the names, tiers and increments', async () => {
+    const text = (await createPdf(sampleWorkspace(), ALL, false)).output();
+    expect(text).toContain('Alice Martin');
+    expect(text).toContain('Bob Dupont *');
+    expect(text).toContain('Dev Ramsamy');
+    expect(text).toContain('Average increment');
+    expect(text).toContain('6 %');
+    expect(text).not.toMatch(/salary/i);
   });
 });

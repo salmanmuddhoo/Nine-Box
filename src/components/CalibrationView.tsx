@@ -1,4 +1,4 @@
-import { formatCount, formatMoney, formatPercent } from '../format';
+import { formatCount, formatPercent } from '../format';
 import { calibration, incrementSummary, isTierAdjusted, memberBox, memberIncrement, memberTier } from '../model/logic';
 import type { Action } from '../model/store';
 import type { Workspace } from '../model/types';
@@ -9,7 +9,6 @@ export function CalibrationView({ ws, act, onEdit }: { ws: Workspace; act: (acti
   const { settings } = ws;
   const cal = calibration(ws);
   const inc = incrementSummary(ws);
-  const missingSalary = ws.members.filter((m) => m.salary === null).length;
   const missingIncrement = ws.members.filter((m) => memberTier(settings, m) && memberIncrement(settings, m) === null).length;
 
   return (
@@ -145,9 +144,7 @@ export function CalibrationView({ ws, act, onEdit }: { ws: Workspace; act: (acti
                 <th>Tier</th>
                 <th className="num">Members</th>
                 <th className="num">Default increment</th>
-                <th className="num">Current payroll</th>
-                <th className="num">Increment cost</th>
-                <th className="num">% of payroll</th>
+                <th className="num">Average increment</th>
               </tr>
             </thead>
             <tbody>
@@ -159,9 +156,7 @@ export function CalibrationView({ ws, act, onEdit }: { ws: Workspace; act: (acti
                     </td>
                     <td className="num">{row.count}</td>
                     <td className="num">{row.tier ? formatPercent(row.tier.increment) || <span className="muted">not set</span> : ''}</td>
-                    <td className="num">{formatMoney(row.payroll, settings.currency)}</td>
-                    <td className="num">{formatMoney(row.increment, settings.currency)}</td>
-                    <td className="num">{row.payroll ? formatPercent((row.increment / row.payroll) * 100) : ''}</td>
+                    <td className="num">{formatPercent(row.average)}</td>
                   </tr>
                 ),
               )}
@@ -171,22 +166,18 @@ export function CalibrationView({ ws, act, onEdit }: { ws: Workspace; act: (acti
                 <th>Total</th>
                 <td className="num">{inc.total.count}</td>
                 <td />
-                <td className="num">{formatMoney(inc.total.payroll, settings.currency)}</td>
                 <td className="num">
-                  <strong>{formatMoney(inc.total.increment, settings.currency)}</strong>
+                  <strong>{formatPercent(inc.total.average)}</strong>
                 </td>
-                <td className="num">{inc.total.payroll ? formatPercent((inc.total.increment / inc.total.payroll) * 100) : ''}</td>
               </tr>
             </tfoot>
           </table>
         </div>
-        {(missingSalary > 0 || missingIncrement > 0) && (
-          <p className="hint">
-            {missingSalary > 0 && `${missingSalary} member${missingSalary > 1 ? 's have' : ' has'} no salary entered. `}
-            {missingIncrement > 0 &&
-              `${missingIncrement} placed member${missingIncrement > 1 ? 's have' : ' has'} no increment % yet — set one per tier in Settings or per person on the Team tab.`}
-          </p>
-        )}
+        <p className="hint">
+          Average increment is the simple average of each person's increment % (their own, or their tier's default).
+          {missingIncrement > 0 &&
+            ` ${missingIncrement} placed member${missingIncrement > 1 ? 's have' : ' has'} no increment % yet — set one per tier in Settings or per person on the Team tab.`}
+        </p>
       </section>
     </div>
   );

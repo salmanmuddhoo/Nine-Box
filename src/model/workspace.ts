@@ -15,7 +15,6 @@ export function createWorkspace(): Workspace {
     team: { name: '', manager: '', period: String(new Date().getFullYear()) },
     members: [],
     settings: defaultSettings(),
-    notes: {},
   };
 }
 
@@ -28,7 +27,6 @@ export function createMember(fields: Partial<Omit<Member, 'id'>> = {}): Member {
     savoirFaire: null,
     tierOverride: null,
     incrementOverride: null,
-    salary: null,
     comment: '',
     ...fields,
   };
@@ -55,9 +53,6 @@ export function parseWorkspace(input: unknown): Workspace {
     team: { name: str(team.name), manager: str(team.manager), period: str(team.period) },
     members: Array.isArray(raw.members) ? raw.members.filter(isObject).map((m) => parseMember(m, tierIds)) : [],
     settings,
-    notes: isObject(raw.notes)
-      ? Object.fromEntries(Object.entries(raw.notes).filter(([, v]) => typeof v === 'string')) as Record<string, string>
-      : {},
   };
 }
 
@@ -71,7 +66,6 @@ function parseMember(m: Record<string, unknown>, tierIds: Set<string>): Member {
     savoirFaire: level(m.savoirFaire),
     tierOverride,
     incrementOverride: num(m.incrementOverride),
-    salary: num(m.salary),
     comment: str(m.comment),
   };
 }
@@ -117,7 +111,6 @@ function parseSettings(input: unknown): Settings {
     savoirFaire: parseAxis(input.savoirFaire, defaults.savoirFaire),
     tiers,
     boxes,
-    currency: typeof input.currency === 'string' ? input.currency : defaults.currency,
   };
 }
 

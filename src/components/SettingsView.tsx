@@ -206,12 +206,9 @@ export function SettingsView({ ws, act }: { ws: Workspace; act: (action: Action)
       </section>
 
       <section className="card">
-        <h2>Other</h2>
-        <label className="inline">
-          Currency label
-          <input className="input-short" value={settings.currency} placeholder="e.g. Rs" onChange={(e) => save({ ...settings, currency: e.target.value })} />
-        </label>
-        <div className="inline top-gap">
+        <h2>Defaults</h2>
+        <p className="hint">Go back to the original tiers, boxes and scales.</p>
+        <div className="inline">
           <button
             type="button"
             className="button button--ghost"

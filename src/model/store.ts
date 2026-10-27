@@ -8,8 +8,7 @@ export type Action =
   | { type: 'updateMember'; id: string; patch: Partial<Omit<Member, 'id'>> }
   | { type: 'removeMember'; id: string }
   | { type: 'placeMember'; id: string; box: BoxId | null }
-  | { type: 'settings'; settings: Settings }
-  | { type: 'note'; id: string; text: string };
+  | { type: 'settings'; settings: Settings };
 
 export function reducer(ws: Workspace, action: Action): Workspace {
   switch (action.type) {
@@ -29,8 +28,6 @@ export function reducer(ws: Workspace, action: Action): Workspace {
     }
     case 'settings':
       return withSettings(ws, action.settings);
-    case 'note':
-      return { ...ws, notes: { ...ws.notes, [action.id]: action.text } };
   }
 }
 

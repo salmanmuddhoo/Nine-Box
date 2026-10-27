@@ -61,17 +61,19 @@ describe('readExcel', () => {
     ]);
   });
 
-  it('reads a list with French headers', async () => {
+  it('reads a list with French headers and ignores other columns', async () => {
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('Liste');
-    ws.addRow(['Nom', 'Poste', 'Salaire']);
-    ws.addRow(['Alice', 'Analyste', 45000]);
-    ws.addRow(['Bob', 'Comptable', '38 500,50']);
+    ws.addRow(['Nom', 'Poste', 'Salaire', 'Commentaires']);
+    ws.addRow(['Alice', 'Analyste', 45000, 'Très bien']);
+    ws.addRow(['Bob', 'Comptable', 38500]);
     const result = await readExcel(await toBuffer(wb), defaultSettings());
-    expect(result.kind === 'members' && result.members.map((m) => [m.name, m.position, m.salary])).toEqual([
-      ['Alice', 'Analyste', 45000],
-      ['Bob', 'Comptable', 38500.5],
+    if (result.kind !== 'members') throw new Error('expected members');
+    expect(result.members.map((m) => [m.name, m.position, m.comment])).toEqual([
+      ['Alice', 'Analyste', 'Très bien'],
+      ['Bob', 'Comptable', ''],
     ]);
+    expect(result.members[0]).not.toHaveProperty('salary');
   });
 
   it('falls back to names in the first column', async () => {
@@ -95,15 +97,13 @@ describe('exportExcel', () => {
   function sampleWorkspace() {
     const ws = createWorkspace();
     ws.team = { name: 'Équipe Finance', manager: 'Manager', period: '2026' };
-    ws.settings.currency = 'Rs';
     ws.settings.tiers.forEach((t, i) => (t.increment = [8, 5, 3, 0][i]));
     ws.members = [
-      createMember({ name: 'Alice', savoirEtre: 3, savoirFaire: 3, salary: 50000 }),
-      createMember({ name: 'Bob', savoirEtre: 2, savoirFaire: 2, salary: 40000, tierOverride: 'bonne', comment: 'Strong H2' }),
+      createMember({ name: 'Alice', savoirEtre: 3, savoirFaire: 3 }),
+      createMember({ name: 'Bob', savoirEtre: 2, savoirFaire: 2, tierOverride: 'bonne', comment: 'Strong H2' }),
       createMember({ name: 'Chloé', savoirEtre: 1, savoirFaire: 1 }),
       createMember({ name: 'Dev', position: 'New joiner' }),
     ];
-    ws.notes = { scope: 'Finance only' };
     return ws;
   }
 
@@ -119,17 +119,29 @@ describe('exportExcel', () => {
     const blob = await exportExcel(ws);
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(await blob.arrayBuffer());
-    expect(wb.worksheets.map((s) => s.name)).toEqual(['Team', 'Nine-Box Grid', 'Calibration', 'Guiding questions', '_nine-box']);
+    expect(wb.worksheets.map((s) => s.name)).toEqual(['Team', 'Nine-Box Grid', 'Calibration', '_nine-box']);
 
     const team = wb.getWorksheet('Team')!;
-    expect(team.getRow(6).values).toContain('Tier');
+    expect(team.getRow(6).values).toEqual([
+      undefined,
+      'Name',
+      'Position',
+      'Savoir-être',
+      'Savoir-faire',
+      'Box',
+      'Recommended action',
+      'Tier',
+      'Tier adjusted',
+      'Increment %',
+      'Comments',
+    ]);
     expect(team.getCell('A7').value).toBe('Alice');
     expect(team.getCell('G7').value).toBe('Excellente Année');
     expect(team.getCell('I7').value).toBe(0.08);
-    expect(team.getCell('K7').value).toMatchObject({ result: 4000 });
     expect(team.getCell('G8').value).toBe('Bonne Année');
     expect(team.getCell('H8').value).toBe('Yes');
-    expect(team.getCell('L8').value).toMatchObject({ result: 42000 });
+    expect(team.getCell('I8').value).toBe(0.05);
+    expect(team.getCell('J8').value).toBe('Strong H2');
     expect(team.getCell('G10').value).toBe('');
 
     const cal = wb.getWorksheet('Calibration')!;
@@ -137,6 +149,11 @@ describe('exportExcel', () => {
     expect(cal.getCell('D5').value).toMatchObject({ formula: "COUNTIF('Team'!$G$7:$G$10,A5)", result: 1 });
     expect(cal.getCell('D6').value).toMatchObject({ result: 1 });
     expect(cal.getCell('D9').value).toMatchObject({ result: 1 });
+    expect(cal.getRow(4).values).toContain('Average increment %');
+    expect(cal.getCell('H5').value).toMatchObject({ formula: `IFERROR(AVERAGEIF('Team'!$G$7:$G$10,A5,'Team'!$I$7:$I$10),"")`, result: 0.08 });
+    // Nobody in "Année normale": the cell stays blank (Excel computes it on open).
+    expect((cal.getCell('H7').value as { result?: unknown }).result ?? '').toBe('');
+    expect((cal.getCell('H10').value as { result: number }).result).toBeCloseTo(13 / 300);
 
     const grid = wb.getWorksheet('Nine-Box Grid')!;
     // Top-right box (Top Talent) sits in row 4 (names), column E.

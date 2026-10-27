@@ -45,22 +45,6 @@ export function memberIncrement(settings: Settings, member: Member): number | nu
   return memberTier(settings, member)?.increment ?? null;
 }
 
-export function incrementAmount(settings: Settings, member: Member): number | null {
-  const pct = memberIncrement(settings, member);
-  if (pct === null || member.salary === null) return null;
-  return roundMoney((member.salary * pct) / 100);
-}
-
-export function newSalary(settings: Settings, member: Member): number | null {
-  const amount = incrementAmount(settings, member);
-  if (amount === null || member.salary === null) return null;
-  return roundMoney(member.salary + amount);
-}
-
-function roundMoney(value: number): number {
-  return Math.round(value * 100) / 100;
-}
-
 export interface CalibrationRow {
   tier: Tier;
   /** Target headcount for the whole team (can be fractional). */
@@ -108,37 +92,33 @@ export function calibration(ws: Workspace): Calibration {
 export interface IncrementRow {
   tier: Tier | null;
   count: number;
-  /** Members in the row with both a salary and an increment percentage. */
-  costed: number;
-  payroll: number;
-  increment: number;
+  /** Members in the row who have an increment percentage. */
+  withIncrement: number;
+  /** Simple average of their increments, in percent; null when nobody has one. */
+  average: number | null;
 }
 
-/** Increment budget per tier, plus a final row (tier null) for members not placed yet. */
+/** Increments per tier, plus a final row (tier null) for members not placed yet. */
 export function incrementSummary(ws: Workspace): { rows: IncrementRow[]; total: IncrementRow } {
   const { settings } = ws;
-  const rows: IncrementRow[] = [...settings.tiers, null].map((tier) => ({
-    tier,
-    count: 0,
-    costed: 0,
-    payroll: 0,
-    increment: 0,
-  }));
-  const total: IncrementRow = { tier: null, count: 0, costed: 0, payroll: 0, increment: 0 };
+  const sums = [...settings.tiers, null].map((tier) => ({ tier, count: 0, withIncrement: 0, sum: 0 }));
+  const total = { tier: null, count: 0, withIncrement: 0, sum: 0 };
   for (const m of ws.members) {
     const tier = memberTier(settings, m);
-    const index = tier ? settings.tiers.indexOf(tier) : settings.tiers.length;
-    const amount = incrementAmount(settings, m);
-    for (const row of [rows[index], total]) {
+    const pct = memberIncrement(settings, m);
+    for (const row of [sums[tier ? settings.tiers.indexOf(tier) : settings.tiers.length], total]) {
       row.count++;
-      if (m.salary !== null) row.payroll += m.salary;
-      if (amount !== null) {
-        row.costed++;
-        row.increment += amount;
+      if (pct !== null) {
+        row.withIncrement++;
+        row.sum += pct;
       }
     }
   }
-  return { rows, total };
+  const finish = ({ sum, ...row }: (typeof sums)[number]): IncrementRow => ({
+    ...row,
+    average: row.withIncrement ? sum / row.withIncrement : null,
+  });
+  return { rows: sums.map(finish), total: finish(total) };
 }
 
 export function levelText(settings: Settings, axis: 'savoirEtre' | 'savoirFaire', level: Level | null): string {
