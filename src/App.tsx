@@ -3,10 +3,12 @@ import { CalibrationView } from './components/CalibrationView';
 import { GridView } from './components/GridView';
 import { GuideView } from './components/GuideView';
 import { MemberDialog } from './components/MemberDialog';
+import { PdfDialog } from './components/PdfDialog';
 import { SettingsView } from './components/SettingsView';
 import { TeamView } from './components/TeamView';
 import { downloadBlob, fileBaseName } from './io/download';
 import { draftEnabled, loadDraft, saveDraft, setDraftEnabled } from './io/draft';
+import type { PdfOptions } from './io/pdfExport';
 import { reducer, type Action } from './model/store';
 import type { Workspace } from './model/types';
 import { createWorkspace, parseWorkspace, serializeWorkspace } from './model/workspace';
@@ -31,6 +33,7 @@ export function App() {
   const [dirty, setDirty] = useState(false);
   const [keepDraft, setKeepDraft] = useState(draftEnabled);
   const [editing, setEditing] = useState<string | null>(null);
+  const [pdfOpen, setPdfOpen] = useState(false);
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -84,6 +87,16 @@ export function App() {
       downloadBlob(await exportExcel(ws), `${baseName}.xlsx`);
       setDirty(false);
       notify('Excel file downloaded. It can also be opened here again.');
+    } catch (e) {
+      notify(`Export failed: ${(e as Error).message}`, true);
+    }
+  };
+
+  const exportToPdf = async (options: PdfOptions) => {
+    try {
+      const { exportPdf } = await import('./io/pdfExport');
+      downloadBlob(await exportPdf(ws, options), `${baseName}.pdf`);
+      notify('PDF downloaded.');
     } catch (e) {
       notify(`Export failed: ${(e as Error).message}`, true);
     }
@@ -164,7 +177,10 @@ export function App() {
             Save
           </button>
           <button type="button" className="button button--accent" onClick={exportToExcel}>
-            Export to Excel
+            Export Excel
+          </button>
+          <button type="button" className="button button--accent" onClick={() => setPdfOpen(true)}>
+            Export PDF
           </button>
           <input
             ref={fileInput}
@@ -183,7 +199,7 @@ export function App() {
       <div className="privacy">
         <span>
           🔒 Private: everything stays in this browser. Nothing is uploaded or stored in a database — use <strong>Save</strong>{' '}
-          or <strong>Export to Excel</strong> to keep your work.
+          or <strong>Export Excel</strong> to keep your work.
         </span>
         <label className="privacy__toggle">
           <input type="checkbox" checked={keepDraft} onChange={(e) => toggleDraft(e.target.checked)} />
@@ -213,6 +229,10 @@ export function App() {
         {tab === 'guide' && <GuideView ws={ws} act={act} />}
         {tab === 'settings' && <SettingsView ws={ws} act={act} />}
       </main>
+
+      <footer className="app-footer">Developed by Salman Muddhoo using AI</footer>
+
+      {pdfOpen && <PdfDialog ws={ws} onExport={exportToPdf} onClose={() => setPdfOpen(false)} />}
 
       {editingMember && (
         <MemberDialog key={editingMember.id} member={editingMember} settings={ws.settings} act={act} onClose={() => setEditing(null)} />

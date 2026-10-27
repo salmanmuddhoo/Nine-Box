@@ -8,6 +8,12 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 export default defineConfig({
   base: './',
   plugins: [react(), viteSingleFile()],
+  build: {
+    rolldownOptions: {
+      // jsPDF loads these only for its HTML and SVG import features, which this app does not use.
+      external: ['html2canvas', 'dompurify', 'canvg'],
+    },
+  },
   test: {
     environment: 'node',
   },

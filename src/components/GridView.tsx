@@ -2,6 +2,7 @@ import { useState, type DragEvent } from 'react';
 import { boxTier, calibration, isTierAdjusted, memberBox, memberTier } from '../model/logic';
 import type { Action } from '../model/store';
 import { LEVELS, type BoxId, type Member, type Workspace } from '../model/types';
+import { PersonAvatar } from './PersonAvatar';
 import { tierStyle, TierBadge } from './TierBadge';
 
 const DRAG_TYPE = 'text/x-nine-box-member';
@@ -43,6 +44,7 @@ export function GridView({ ws, act, onEdit }: { ws: Workspace; act: (action: Act
         <button
           type="button"
           className="chip"
+          style={tierStyle(tier)}
           draggable
           onDragStart={(e) => {
             e.dataTransfer.setData(DRAG_TYPE, m.id);
@@ -52,9 +54,12 @@ export function GridView({ ws, act, onEdit }: { ws: Workspace; act: (action: Act
           onClick={() => onEdit(m.id)}
           title={adjusted && tier ? `Tier adjusted to ${tier.name}` : 'Drag to another box, or click to edit'}
         >
-          <span className="chip__name">{m.name || 'Unnamed'}</span>
-          {m.position && <span className="chip__meta">{m.position}</span>}
-          {adjusted && tier && <span className="chip__tier" style={tierStyle(tier)}>{tier.name}</span>}
+          <PersonAvatar />
+          <span className="chip__text">
+            <span className="chip__name">{m.name || 'Unnamed'}</span>
+            {m.position && <span className="chip__meta">{m.position}</span>}
+            {adjusted && tier && <span className="chip__tier">{tier.name}</span>}
+          </span>
         </button>
       </li>
     );

@@ -12,7 +12,7 @@ scales, same box names and actions.
 - The app is a single static web page. There is **no server and no database**:
   nothing you type is uploaded anywhere.
 - Your work lives in the browser tab. To keep it, click **Save** (a `.json`
-  file) or **Export to Excel** (a formatted `.xlsx`). Both files can be opened
+  file) or **Export Excel** (a formatted `.xlsx`). Both files can be opened
   again with **Open…** to carry on.
 - Optional: tick **Keep a draft in this browser** to survive a page refresh. The
   draft stays in that browser on that computer only, and unticking the box
@@ -27,11 +27,13 @@ scales, same box names and actions.
 2. **Settings** – check the tiers, their target share, the default increment %
    per tier, and which tier each box feeds.
 3. **Grid** – drag each name into a box, or click a name to pick its levels.
+   Each person shows as a figure coloured by their tier.
 4. **Calibration** – compare each tier with its target and move individuals to
    another tier where needed, without changing their box. The increment budget
    (per tier and in total) updates as you go.
-5. **Export to Excel** for the final record: team list, grid, calibration and
-   notes on the guiding questions.
+5. **Export Excel** for the final record (team list, grid, calibration, notes),
+   or **Export PDF** for a landscape A4 report to print or share. The PDF can
+   leave out salary amounts, so it can go to people who should not see them.
 
 ### Default tiers
 
@@ -56,6 +58,10 @@ No default increment % is set: enter your own.
 - **Development:** `npm install`, then `npm run dev`.
 
 ```bash
-npm test          # unit tests (grid logic, saved files, Excel import/export)
+npm test          # unit tests (grid logic, saved files, Excel and PDF export)
 npm run build     # type-check and build dist/index.html
 ```
+
+---
+
+Developed by Salman Muddhoo using AI.

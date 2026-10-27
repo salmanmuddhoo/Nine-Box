@@ -24,8 +24,8 @@ export function GuideView({ ws, act }: { ws: Workspace; act: (action: Action) =>
             needed. The increment budget updates as you go.
           </li>
           <li>
-            <strong>Save</strong> the file or <strong>Export to Excel</strong> before closing the tab. Both files can be
-            opened again here later.
+            <strong>Save</strong> the file or <strong>Export Excel</strong> before closing the tab. Both files can be
+            opened again here later. <strong>Export PDF</strong> gives a report to print or share.
           </li>
         </ol>
         <p className="notice">
