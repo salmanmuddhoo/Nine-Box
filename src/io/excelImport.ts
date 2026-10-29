@@ -109,7 +109,8 @@ function readTable(ws: Worksheet, table: Table, settings: Settings): Member[] {
 const LEVEL_ALIASES: Record<string, Level> = {
   '1': 1, faible: 1, low: 1, bas: 1, basse: 1,
   '2': 2, moyen: 2, moyenne: 2, medium: 2, average: 2,
-  '3': 3, eleve: 3, elevee: 3, high: 3, haut: 3, fort: 3, forte: 3,
+  '3': 3, bon: 3, bonne: 3, good: 3,
+  '4': 4, eleve: 4, elevee: 4, high: 4, haut: 4, fort: 4, forte: 4,
 };
 
 /** Accepts "Moyen", "Moyen : Conforme, Solide, Fiable", "2", "medium", or the labels configured in Settings. */
@@ -117,7 +118,7 @@ export function parseLevel(value: string, axis: Axis): Level | null {
   const text = normalize(value);
   if (!text) return null;
   const head = normalize(text.split(':')[0]);
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < axis.levels.length; i++) {
     const { label, description } = axis.levels[i];
     const full = normalize(description ? `${label} : ${description}` : label);
     if (head === normalize(label) || text === full) return (i + 1) as Level;

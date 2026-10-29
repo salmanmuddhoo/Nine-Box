@@ -1,5 +1,6 @@
 import { formatPercent } from '../format';
 import { defaultSettings } from '../model/defaults';
+import { boxOf } from '../model/logic';
 import type { Action } from '../model/store';
 import { LEVELS, type Axis, type BoxConfig, type BoxId, type Settings, type Tier, type Workspace } from '../model/types';
 import { uid } from '../model/workspace';
@@ -140,7 +141,7 @@ export function SettingsView({ ws, act }: { ws: Workspace; act: (action: Action)
         <div className="settings-grid">
           {[...LEVELS].reverse().flatMap((sf) =>
             LEVELS.map((se) => {
-              const box = ((3 - sf) * 3 + se) as BoxId;
+              const box = boxOf(se, sf)!;
               const config = settings.boxes[box];
               const tier = settings.tiers.find((t) => t.id === config.tierId);
               return (
@@ -198,7 +199,7 @@ export function SettingsView({ ws, act }: { ws: Workspace; act: (action: Action)
                     />
                   </div>
                 ))}
-                <p className="hint">Keep the order low → medium → high.</p>
+                <p className="hint">Keep the order from lowest to highest.</p>
               </fieldset>
             );
           })}

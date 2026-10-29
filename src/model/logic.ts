@@ -1,14 +1,14 @@
-import type { BoxId, Level, Member, Settings, Tier, Workspace } from './types';
+import { LEVELS, type BoxId, type Level, type Member, type Settings, type Tier, type Workspace } from './types';
 
 export function boxOf(savoirEtre: Level | null, savoirFaire: Level | null): BoxId | null {
   if (savoirEtre === null || savoirFaire === null) return null;
-  return ((3 - savoirFaire) * 3 + savoirEtre) as BoxId;
+  return ((LEVELS.length - savoirFaire) * LEVELS.length + savoirEtre) as BoxId;
 }
 
 export function levelsOfBox(box: BoxId): { savoirEtre: Level; savoirFaire: Level } {
   return {
-    savoirEtre: (((box - 1) % 3) + 1) as Level,
-    savoirFaire: (3 - Math.floor((box - 1) / 3)) as Level,
+    savoirEtre: (((box - 1) % LEVELS.length) + 1) as Level,
+    savoirFaire: (LEVELS.length - Math.floor((box - 1) / LEVELS.length)) as Level,
   };
 }
 
