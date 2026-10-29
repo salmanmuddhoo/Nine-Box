@@ -1,14 +1,14 @@
-/** 1 = Faible (low), 2 = Moyen (medium), 3 = Élevé (high). */
-export type Level = 1 | 2 | 3;
-export const LEVELS: readonly Level[] = [1, 2, 3];
+/** 1 = Faible, 2 = Moyen, 3 = Bon, 4 = Élevé. */
+export type Level = 1 | 2 | 3 | 4;
+export const LEVELS: readonly Level[] = [1, 2, 3, 4];
 
 /**
- * Boxes are numbered like the original Excel template: 1–3 is the top row
- * (high Savoir-faire), 7–9 the bottom row, each row going left to right from
- * low to high Savoir-être.
+ * Boxes are numbered row by row from the top (highest Savoir-faire), each row
+ * going left to right from the lowest to the highest Savoir-être: 1–4 is the
+ * top row, 13–16 the bottom row.
  */
-export type BoxId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-export const BOX_IDS: readonly BoxId[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+export type BoxId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
+export const BOX_IDS: readonly BoxId[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
 export interface LevelLabel {
   label: string;
@@ -17,8 +17,8 @@ export interface LevelLabel {
 
 export interface Axis {
   name: string;
-  /** Index 0 describes level 1, index 2 describes level 3. */
-  levels: [LevelLabel, LevelLabel, LevelLabel];
+  /** Index 0 describes level 1, index 3 describes level 4. */
+  levels: [LevelLabel, LevelLabel, LevelLabel, LevelLabel];
 }
 
 export interface Tier {
@@ -68,7 +68,8 @@ export interface Team {
 }
 
 export interface Workspace {
-  version: 1;
+  /** 2 since the fourth level ("Bon") was added; version 1 files had three levels. */
+  version: 2;
   team: Team;
   members: Member[];
   settings: Settings;

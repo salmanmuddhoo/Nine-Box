@@ -46,8 +46,8 @@ export function GuideDialog({ settings, onClose }: { settings: Settings; onClose
               needed. Increments follow the tier.
             </li>
             <li>
-              <strong>Save</strong> the file or <strong>Export Excel</strong> before closing the tab. Both files can be
-              opened again here later. <strong>Export PDF</strong> gives a report to print or share.
+              <strong>Save</strong> the file or <strong>Export</strong> it to Excel before closing the tab. Both files can
+              be opened again here later. Export as PDF for a report to print or share.
             </li>
           </ol>
           <p className="notice">

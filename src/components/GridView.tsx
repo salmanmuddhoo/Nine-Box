@@ -1,5 +1,5 @@
 import { useState, type DragEvent } from 'react';
-import { boxTier, calibration, isTierAdjusted, memberBox, memberTier } from '../model/logic';
+import { boxOf, boxTier, calibration, isTierAdjusted, memberBox, memberTier } from '../model/logic';
 import type { Action } from '../model/store';
 import { LEVELS, type BoxId, type Member, type Workspace } from '../model/types';
 import { PersonAvatar } from './PersonAvatar';
@@ -81,7 +81,7 @@ export function GridView({ ws, act, onEdit }: { ws: Workspace; act: (action: Act
                 <span>{settings.savoirFaire.levels[sf - 1].description}</span>
               </div>
               {LEVELS.map((se) => {
-                const box = ((3 - sf) * 3 + se) as BoxId;
+                const box = boxOf(se, sf)!;
                 const config = settings.boxes[box];
                 const tier = boxTier(settings, box);
                 const members = byBox.get(box) ?? [];

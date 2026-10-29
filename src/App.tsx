@@ -3,7 +3,7 @@ import { CalibrationView } from './components/CalibrationView';
 import { GridView } from './components/GridView';
 import { GuideDialog } from './components/GuideDialog';
 import { MemberDialog } from './components/MemberDialog';
-import { PdfDialog } from './components/PdfDialog';
+import { ExportDialog } from './components/ExportDialog';
 import { SettingsView } from './components/SettingsView';
 import { TeamView } from './components/TeamView';
 import { downloadBlob, fileBaseName } from './io/download';
@@ -32,7 +32,7 @@ export function App() {
   const [dirty, setDirty] = useState(false);
   const [keepDraft, setKeepDraft] = useState(draftEnabled);
   const [editing, setEditing] = useState<string | null>(null);
-  const [pdfOpen, setPdfOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -176,11 +176,8 @@ export function App() {
           <button type="button" className="button button--on-dark" onClick={save}>
             Save
           </button>
-          <button type="button" className="button button--accent" onClick={exportToExcel}>
-            Export Excel
-          </button>
-          <button type="button" className="button button--accent" onClick={() => setPdfOpen(true)}>
-            Export PDF
+          <button type="button" className="button button--accent" onClick={() => setExportOpen(true)}>
+            Export
           </button>
           <button type="button" className="button button--on-dark" onClick={() => setGuideOpen(true)}>
             Guide
@@ -201,8 +198,8 @@ export function App() {
 
       <div className="privacy">
         <span>
-          🔒 Private: everything stays in this browser. Use <strong>Save</strong> or <strong>Export Excel</strong> to keep
-          your work.
+          🔒 Private: everything stays in this browser. Use <strong>Save</strong> or <strong>Export</strong> to Excel to
+          keep your work.
         </span>
         <label className="privacy__toggle">
           <input type="checkbox" checked={keepDraft} onChange={(e) => toggleDraft(e.target.checked)} />
@@ -234,7 +231,7 @@ export function App() {
 
       <footer className="app-footer">Developed by Salman Muddhoo using AI</footer>
 
-      {pdfOpen && <PdfDialog ws={ws} onExport={exportToPdf} onClose={() => setPdfOpen(false)} />}
+      {exportOpen && <ExportDialog onExcel={exportToExcel} onPdf={exportToPdf} onClose={() => setExportOpen(false)} />}
 
       {guideOpen && <GuideDialog settings={ws.settings} onClose={() => setGuideOpen(false)} />}
 

@@ -15,10 +15,12 @@ describe('parseLevel', () => {
   it.each([
     ['Faible : Amélioration requise, Risque Comportemental', 1],
     ['Moyen : Conforme, Solide, Fiable', 2],
-    ['Élevé', 3],
-    ['eleve', 3],
+    ['Bon : Engagé, Proactif, Au-dessus des Attentes', 3],
+    ['Élevé', 4],
+    ['eleve', 4],
     ['  MOYEN ', 2],
-    ['high', 3],
+    ['high', 4],
+    ['bonne', 3],
     ['1', 1],
     ['', null],
     ['Excellent', null],
@@ -56,7 +58,7 @@ describe('readExcel', () => {
     expect(result.sheet).toBe('2. Nine-Box Grid');
     expect(result.members.map((m) => [m.name, m.savoirEtre, m.savoirFaire])).toEqual([
       ['E1', 1, 1],
-      ['E2', 2, 3],
+      ['E2', 2, 4],
       ['E3', null, null],
     ]);
   });
@@ -99,7 +101,7 @@ describe('exportExcel', () => {
     ws.team = { name: 'Équipe Finance', manager: 'Manager', period: '2026' };
     ws.settings.tiers.forEach((t, i) => (t.increment = [8, 5, 3, 0][i]));
     ws.members = [
-      createMember({ name: 'Alice', savoirEtre: 3, savoirFaire: 3 }),
+      createMember({ name: 'Alice', savoirEtre: 4, savoirFaire: 4 }),
       createMember({ name: 'Bob', savoirEtre: 2, savoirFaire: 2, tierOverride: 'bonne', comment: 'Strong H2' }),
       createMember({ name: 'Chloé', savoirEtre: 1, savoirFaire: 1 }),
       createMember({ name: 'Dev', position: 'New joiner' }),
@@ -156,9 +158,11 @@ describe('exportExcel', () => {
     expect((cal.getCell('H10').value as { result: number }).result).toBeCloseTo(13 / 300);
 
     const grid = wb.getWorksheet('Nine-Box Grid')!;
-    // Top-right box (Top Talent) sits in row 4 (names), column E.
-    expect(grid.getCell('E4').value).toBe('Alice');
-    expect(grid.getCell('D6').value).toBe('Bob (→ Bonne Année)');
-    expect(grid.getCell('C8').value).toBe('Chloé');
+    // Four rows of two cells (box header, then names) from row 3; boxes in columns C to F.
+    expect(grid.getCell('F3').value).toMatchObject({ richText: expect.arrayContaining([expect.objectContaining({ text: 'Top Talent (1)' })]) });
+    expect(grid.getCell('F4').value).toBe('Alice');
+    expect(grid.getCell('D8').value).toBe('Bob (→ Bonne Année)');
+    expect(grid.getCell('C10').value).toBe('Chloé');
+    expect(grid.getCell('E5').value).toMatchObject({ richText: expect.arrayContaining([expect.objectContaining({ text: 'Performer Solide (0)' })]) });
   });
 });

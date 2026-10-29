@@ -1,5 +1,5 @@
 import type { Cell, Font, Worksheet } from 'exceljs';
-import { boxTier, calibration, incrementSummary, isTierAdjusted, levelText, memberBox, memberIncrement, memberTier } from '../model/logic';
+import { boxOf, boxTier, calibration, incrementSummary, isTierAdjusted, levelText, memberBox, memberIncrement, memberTier } from '../model/logic';
 import { LEVELS, type BoxId, type Workspace } from '../model/types';
 import { serializeWorkspace } from '../model/workspace';
 import { DATA_CHUNK, DATA_SHEET, loadExcelJS } from './excel';
@@ -135,7 +135,8 @@ function addGridSheet(sheet: Worksheet, ws: Workspace) {
   line(sheet.getCell('A1'), `Nine-Box Grid${ws.team.name ? ` — ${ws.team.name}` : ''}`, TITLE_FONT);
   sheet.getColumn(1).width = 6;
   sheet.getColumn(2).width = 16;
-  for (const c of [3, 4, 5]) sheet.getColumn(c).width = 38;
+  const n = LEVELS.length;
+  for (let c = 3; c < 3 + n; c++) sheet.getColumn(c).width = 32;
 
   const byBox = new Map<BoxId, string[]>();
   for (const m of ws.members) {
@@ -153,7 +154,7 @@ function addGridSheet(sheet: Worksheet, ws: Workspace) {
     label.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
     let maxNames = 0;
     LEVELS.forEach((se, colIndex) => {
-      const box = ((3 - sf) * 3 + se) as BoxId;
+      const box = boxOf(se, sf)!;
       const config = settings.boxes[box];
       const tier = boxTier(settings, box);
       const names = byBox.get(box) ?? [];
@@ -177,15 +178,15 @@ function addGridSheet(sheet: Worksheet, ws: Workspace) {
     sheet.getRow(r + 1).height = Math.max(60, 14 * maxNames + 6);
   });
 
-  const bottom = top + 6;
+  const bottom = top + 2 * n;
   LEVELS.forEach((se, i) => {
     const cell = put(sheet.getCell(bottom, 3 + i), settings.savoirEtre.levels[se - 1].label, { bold: true });
     cell.alignment = { horizontal: 'center' };
   });
-  sheet.mergeCells(bottom + 1, 3, bottom + 1, 5);
+  sheet.mergeCells(bottom + 1, 3, bottom + 1, 2 + n);
   const xAxis = put(sheet.getCell(bottom + 1, 3), `${settings.savoirEtre.name} →`, { bold: true, size: 12 });
   xAxis.alignment = { horizontal: 'center' };
-  sheet.mergeCells(top, 1, top + 5, 1);
+  sheet.mergeCells(top, 1, bottom - 1, 1);
   const yAxis = put(sheet.getCell(top, 1), `${settings.savoirFaire.name} →`, { bold: true, size: 12 });
   yAxis.alignment = { horizontal: 'center', vertical: 'middle', textRotation: 90 };
   sheet.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 1 };
